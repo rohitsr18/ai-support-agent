@@ -180,8 +180,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Then edit .env with your real API keys
 
-# Start server
-uvicorn app:app --host 0.0.0.0 --port 8000
+# Start server (auto-switches to next available port if 8000 is busy)
+python start_server.py
 ```
 
 ### Docker
