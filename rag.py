@@ -23,12 +23,16 @@ logger = logging.getLogger(__name__)
 # used instantly when fallback is needed.
 # ============================================================
 
-# OpenAI client
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# API keys (optional in local/dev runs)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Clients are lazy-initialized so import works even when keys are missing.
+openai_client = None
 OPENAI_MODEL = "gpt-4o-mini"
 
 # Google Gemini client (uses the new google-genai SDK)
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+gemini_client = None
 GEMINI_MODEL = "gemini-2.0-flash"
 
 # ============================================================
@@ -68,6 +72,12 @@ def _get_store() -> FaissVectorStore:
 
 def _call_openai(prompt: str) -> str:
     """Call OpenAI API to generate a response."""
+    global openai_client
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is not set")
+    if openai_client is None:
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+
     response = openai_client.chat.completions.create(
         model=OPENAI_MODEL,
         messages=[{"role": "user", "content": prompt}],
@@ -77,6 +87,12 @@ def _call_openai(prompt: str) -> str:
 
 def _call_gemini(prompt: str) -> str:
     """Call Google Gemini API to generate a response."""
+    global gemini_client
+    if not GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY is not set")
+    if gemini_client is None:
+        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
     response = gemini_client.models.generate_content(
         model=GEMINI_MODEL,
         contents=prompt,

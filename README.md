@@ -14,12 +14,12 @@ ai-support-agent/
 ├── agent.py                # Intent detection, session memory, message routing
 ├── rag.py                  # RAG pipeline (FAISS retrieval + LLM generation)
 ├── order_service.py        # Order tracking and return initiation
-├── embeddings.py           # OpenAI embedding generation
+├── embeddings.py           # Deterministic hash-based embedding generation
 ├── vector_store_faiss.py   # FAISS vector store for document search
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile              # Docker containerization
-├── certs.pem               # Combined CA certificate bundle (SSL)
-└── .env                    # Environment variables (OPENAI_API_KEY)
+├── .env.example            # Environment variables template
+└── .gitignore              # Git ignore rules for secrets and artifacts
 ```
 
 ---
@@ -33,7 +33,6 @@ ai-support-agent/
 - `POST /chat` — Accepts `session_id` and `message`, returns agent reply
 - `GET /` — Health check endpoint
 - Loads environment variables via `python-dotenv`
-- Handles SSL certificates for corporate proxy environments
 
 ### 2. Intent Detection and Entity Extraction
 
@@ -99,10 +98,10 @@ The agent classifies every incoming message into one of four intents:
 
 - **Knowledge Base:** 4 pre-loaded documents covering delays, returns, refunds, and order tracking
 - **Retrieval:** FAISS vector similarity search finds top-3 relevant documents
-- **Generation:** OpenAI `gpt-4o-mini` generates answers strictly from retrieved context
-- **Lazy initialization:** FAISS store is built on first FAQ query, not at import time
-- **Error handling:** Graceful fallback message on API errors (quota, network, SSL)
-- **Logging:** Errors logged for debugging
+- **Generation:** Dual-provider support (OpenAI `gpt-4o-mini` primary, Gemini `gemini-2.0-flash` fallback)
+- **Lazy initialization:** Clients and FAISS store initialized on first use, not at import time
+- **Error handling:** Automatic fallback to Gemini if OpenAI fails; graceful timeout message if both fail
+- **Logging:** API errors logged for debugging
 
 ### 8. Vector Store (FAISS)
 
@@ -117,8 +116,10 @@ The agent classifies every incoming message into one of four intents:
 
 **File:** `embeddings.py`
 
-- Uses OpenAI `text-embedding-3-small` model
-- `embed(text)` — Returns embedding vector for any text input
+- Uses deterministic hash-based embedding generation (no external API calls)
+- Consistent, reproducible embeddings for the same text
+- `embed(text)` — Returns fixed-dimension (1536) embedding vector
+- No quota limits or API costs
 
 ### 10. Docker Support
 
@@ -175,8 +176,9 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Set OpenAI API key
-echo "OPENAI_API_KEY=your-key-here" > .env
+# Configure environment variables
+cp .env.example .env
+# Then edit .env with your real API keys
 
 # Start server
 uvicorn app:app --host 0.0.0.0 --port 8000
@@ -208,8 +210,8 @@ curl -X POST http://localhost:8000/chat \
 | Component | Technology |
 |-----------|-----------|
 | Web Framework | FastAPI |
-| LLM | OpenAI GPT-4o-mini |
-| Embeddings | OpenAI text-embedding-3-small |
+| LLM | OpenAI GPT-4o-mini (primary) / Gemini 2.0-flash (fallback) |
+| Embeddings | Deterministic hash-based (local) |
 | Vector Store | FAISS (faiss-cpu) |
 | Containerization | Docker |
 | Language | Python 3.11+ |
@@ -223,5 +225,6 @@ curl -X POST http://localhost:8000/chat \
 - `pydantic` — Request validation
 - `python-dotenv` — Environment variable loading
 - `openai` — OpenAI API client
+- `google-genai` — Google Gemini API client
 - `faiss-cpu` — Vector similarity search
 - `numpy` — Numerical operations

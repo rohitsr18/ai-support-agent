@@ -1,14 +1,6 @@
 # app.py - Entry point for the AI Customer Support Agent API
 # Sets up the FastAPI server with endpoints for chat and health check.
 
-import os
-
-# Fix SSL certificate verification for corporate proxy environments (e.g. ZScaler)
-_certs = os.path.join(os.path.dirname(__file__), "certs.pem")
-os.environ["SSL_CERT_FILE"] = _certs
-os.environ["GRPC_DEFAULT_SSL_ROOTS_FILE_PATH"] = _certs
-os.environ["REQUESTS_CA_BUNDLE"] = _certs
-
 # Load environment variables from .env file (e.g. OPENAI_API_KEY)
 from dotenv import load_dotenv
 load_dotenv()
