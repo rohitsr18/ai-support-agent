@@ -1,0 +1,31 @@
+# Local development artifacts
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Git files
+.git/
+.gitignore
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+
+# Local env (never upload real keys)
+.env
+
+# Python cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node/test files
+node_modules/
