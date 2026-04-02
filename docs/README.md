@@ -160,7 +160,3 @@ Edit `src/pragna/services/rag.py` and add to `KNOWLEDGE_BASE` list.
 - Start command for this repo: `python scripts/start_server.py`
 - If port 8000 is busy, the script automatically picks the next free port.
 
-## License
-
-MIT
-
