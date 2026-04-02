@@ -212,8 +212,7 @@
         </header>
         <section id="chat" class="chat"></section>
         <section class="foot">
-            <input id="name" placeholder="Your name (press Enter)" autocomplete="off" />
-            <textarea id="message" placeholder="Type your question here... (Shift+Enter for new line)"></textarea>
+            <textarea id="message" placeholder="Type your message here... (Shift+Enter for new line)"></textarea>
             <div class="input-row">
                 <button id="send">Send Message</button>
             </div>
@@ -225,10 +224,8 @@
         class ChatUI {
             constructor() {
                 this.chatEl = document.getElementById("chat");
-                this.nameEl = document.getElementById("name");
                 this.messageEl = document.getElementById("message");
                 this.sendEl = document.getElementById("send");
-                this.greetedByName = false;
                 this.sessionId = Math.random().toString(36).substr(2, 9);
                 this.initialize();
             }
@@ -236,20 +233,11 @@
             initialize() {
                 this.setupEventListeners();
                 this.displayWelcomeMessage();
-                this.nameEl.focus();
+                this.messageEl.focus();
             }
 
             setupEventListeners() {
                 this.sendEl.addEventListener("click", () => this.handleSendMessage());
-                
-                this.nameEl.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        this.handleNameEntry();
-                    }
-                });
-                
-                this.nameEl.addEventListener("blur", () => this.handleNameEntry());
                 
                 this.messageEl.addEventListener("keydown", (e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -260,20 +248,10 @@
             }
 
             displayWelcomeMessage() {
-                this.appendMessage("bot", "Welcome to Pragna! 👋 What's your name?");
-            }
-
-            handleNameEntry() {
-                const name = this.nameEl.value.trim();
-                if (name && !this.greetedByName) {
-                    this.appendMessage("bot", `Hi ${name}! How can I help you today?`);
-                    this.greetedByName = true;
-                    this.messageEl.focus();
-                }
+                this.appendMessage("bot", "Hi! I'm Pragna, your AI support assistant. I can help with order tracking, returns, and general questions. What's your name?");
             }
 
             handleSendMessage() {
-                const name = this.nameEl.value.trim();
                 const message = this.messageEl.value.trim();
                 
                 if (!message) {
@@ -281,16 +259,9 @@
                     return;
                 }
                 
-                if (!name) {
-                    this.appendMessage("bot", "Please tell me your name before we continue.");
-                    this.nameEl.focus();
-                    return;
-                }
-                
-                this.handleNameEntry();
                 this.appendMessage("user", message);
                 this.messageEl.value = "";
-                this.sendMessage(name, message);
+                this.sendMessage(message);
             }
 
             appendMessage(role, text) {
@@ -319,7 +290,7 @@
                 return wrapper;
             }
 
-            async sendMessage(name, message) {
+            async sendMessage(message) {
                 const typingIndicator = this.showTypingIndicator();
                 this.sendEl.disabled = true;
 
@@ -329,8 +300,7 @@
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ 
                             session_id: this.sessionId, 
-                            message, 
-                            name 
+                            message
                         })
                     });
 
