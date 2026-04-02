@@ -105,7 +105,7 @@ def serve_chat_ui():
     Clients access this at /app to use the chat widget.
     
     Returns:
-        FileResponse with UI.html content.
+        FileResponse with ui.html content.
     """
-    ui_path = STATIC_DIR / "UI.html"
+    ui_path = STATIC_DIR / "ui.html"
     return FileResponse(ui_path, media_type="text/html")
