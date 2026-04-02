@@ -32,24 +32,60 @@ class EntityExtractor:
         match = re.search(r"\b(ORD\d+)\b", message, re.IGNORECASE)
         return match.group(1).upper() if match else None
     
+    # Common words that should not be treated as names
+    NON_NAMES = {
+        'hi', 'hello', 'hey', 'yes', 'no', 'ok', 'okay', 'sure', 'thanks',
+        'thank', 'please', 'help', 'good', 'morning', 'afternoon', 'evening',
+        'bye', 'goodbye', 'what', 'how', 'why', 'when', 'where', 'who',
+    }
+
     @staticmethod
     def extract_name(message: str) -> Optional[str]:
         """
-        Extract user's name from introduction phrases.
-        Matches: 'My name is X', 'I am X', 'I'm X', 'This is X'
+        Extract user's name from introduction phrases or standalone name.
+        Matches: 'My name is X', 'I am X', 'I'm X', 'This is X', or just 'X' (single word)
         Returns capitalized name or None.
         """
+        # Pattern-based extraction
         patterns = [
             r"\bmy name is\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
             r"\bi am\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
             r"\bi'm\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
             r"\bthis is\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
+            r"\bcall me\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
+            r"\bit's\s+([A-Za-z][A-Za-z'\-]{1,30})\b",
         ]
         for pattern in patterns:
             match = re.search(pattern, message, re.IGNORECASE)
             if match:
                 return match.group(1).capitalize()
+        
+        # Check for standalone name (single word, 2-20 chars, letters only)
+        msg = message.strip()
+        if re.match(r"^[A-Za-z]{2,20}$", msg):
+            # Exclude common greetings and filler words
+            if msg.lower() not in EntityExtractor.NON_NAMES:
+                return msg.capitalize()
+        
         return None
+    
+    @staticmethod
+    def is_name_response(message: str) -> bool:
+        """
+        Check if message looks like a name response to 'What's your name?'.
+        Matches single words or short phrases that look like names.
+        Excludes common greetings and filler words.
+        """
+        msg = message.strip().lower()
+        
+        # Single word check
+        if re.match(r'^[A-Za-z]{2,20}$', msg):
+            return msg not in EntityExtractor.NON_NAMES
+        
+        # Short intro phrases
+        if re.match(r"^(i'm|my name is|call me|it's|this is)\s+[A-Za-z]{2,20}$", msg, re.IGNORECASE):
+            return True
+        return False
     
     @staticmethod
     def detect_style_preference(message: str) -> Optional[str]:
@@ -118,10 +154,18 @@ class IntentDetector:
         "real person",
         "customer representative",
         "talk to human",
+        "talk to a human",
         "speak to human",
+        "speak to a human",
+        "speak with human",
+        "speak with a human",
         "connect me to",
         "transfer me",
         "escalate this",
+        "real human",
+        "actual person",
+        "supervisor",
+        "manager",
     ]
     
     # Keywords suggesting order status inquiry

@@ -53,6 +53,12 @@ class MessageHandler:
         if detected_name:
             session_manager.set_name(session_id, detected_name)
         
+        # If user just introduced themselves, greet and ask how to help
+        if detected_name and self.extractor.is_name_response(message):
+            reply = f"Nice to meet you, {detected_name}! How can I help you today?"
+            session_manager.add_message(session_id, "assistant", reply)
+            return reply
+        
         # --- Adaptive Learning ---
         # Track style preference: "concise" or "detailed"
         style_pref = self.extractor.detect_style_preference(message)

@@ -4,5 +4,7 @@ pydantic
 python-dotenv
 openai
 google-genai
+groq
+requests
 faiss-cpu
 numpy
